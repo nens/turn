@@ -12,39 +12,38 @@ pubsub system for one or more resources.
 
 Installation
 ------------
-```
-python bootstrap.py
-bin/buildout
-```
+.. code::
+
+    python bootstrap.py
+    bin/buildout
 
 Usage
 -----
 
 Basic usage goes like this:
-```python
-import turn
-server = turn.Server()
+.. code ::
 
-resource = 'my_valuable_resource'
-label = 'This shows up in status reports and messages.'
+    import turn
+    server = turn.Server()
 
-with server.lock(resource=resource, label=label):
-    pass  # do your careful work on the resource here
-```
+    resource = 'my_valuable_resource'
+    label = 'This shows up in status reports and messages.'
+
+    with server.lock(resource=resource, label=label):
+        pass  # do your careful work on the resource here
 
 Inspection can be done using the console script:
 
-```
-$ turn status my_valuable_resource
-my_valuable_resource                                       5
-------------------------------------------------------------
-This shows up in status reports and messages.              5
-```
+.. code::
 
-```
-$ turn follow my_valuable_resource
-my_valuable_resource: 5 drawn by "This shows up in status reports and messages."
-my_valuable_resource: 5 starts
-my_valuable_resource: 5 completed by "This shows up in status reports and messages."
-my_valuable_resource: 6 can start now
-```
+    $ turn status my_valuable_resource
+    my_valuable_resource                                       5
+    ------------------------------------------------------------
+    This shows up in status reports and messages.              5
+
+.. code::
+    $ turn follow my_valuable_resource
+    my_valuable_resource: 5 drawn by "This shows up in status reports and messages."
+    my_valuable_resource: 5 starts
+    my_valuable_resource: 5 completed by "This shows up in status reports and messages."
+    my_valuable_resource: 6 can start now
