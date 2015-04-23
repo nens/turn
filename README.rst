@@ -14,9 +14,7 @@ Installation
 ------------
 
 ::
-
-    python bootstrap.py
-    bin/buildout
+    $ pip install turn
 
 Usage
 -----

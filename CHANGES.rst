@@ -5,7 +5,7 @@ Changelog of turn
 0.2 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- U can use pip now.
 
 
 0.1 (2015-04-23)
