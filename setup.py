@@ -10,6 +10,7 @@ long_description = '\n\n'.join([
 
 install_requires = [
     'setuptools',
+    'redis',
     ],
 
 tests_require = [
@@ -19,13 +20,14 @@ tests_require = [
 
 setup(name='turn',
       version=version,
-      description="TODO",
+      description=('Turn is a distributed resource'
+                   ' locking queue system using python and redis.'),
       long_description=long_description,
       # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[],
       keywords=[],
-      author='TODO',
-      author_email='TODO@nelen-schuurmans.nl',
+      author='Arjan Verkerk',
+      author_email='arjan.verkerk@nelen-schuurmans.nl',
       url='',
       license='GPL',
       packages=['turn'],
@@ -36,5 +38,6 @@ setup(name='turn',
       extras_require={'test': tests_require},
       entry_points={
           'console_scripts': [
+              'turn = turn:main',
           ]},
       )
