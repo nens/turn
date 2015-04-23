@@ -12,7 +12,8 @@ pubsub system for one or more resources.
 
 Installation
 ------------
-.. code::
+
+::
 
     python bootstrap.py
     bin/buildout
@@ -20,8 +21,7 @@ Installation
 Usage
 -----
 
-Basic usage goes like this:
-.. code ::
+Basic usage goes like this::
 
     import turn
     server = turn.Server()
