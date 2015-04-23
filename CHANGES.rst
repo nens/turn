@@ -2,7 +2,7 @@ Changelog of turn
 ===================================================
 
 
-0.1 (unreleased)
+0.1 (2015-04-23)
 ----------------
 
 - Initial project structure created with nensskel 1.36.dev0.
