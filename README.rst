@@ -23,6 +23,32 @@ Installation is straightforward::
 
 Of course, you should also have a redis server at hand.
 
+Implementation
+--------------
+When a lock is requested, a unique serial number is obtained from Redis
+via INCR on a redis value, called the dispenser. The lock is acquired
+only if another value, called the indicator, corresponds to the unique
+serial number.
+
+There are two ways for the indicator to change.
+
+1. The user with the corresponding serial number is done with the
+   modification and increases the number, notifying any other subscribed
+   waiting users. This is the preferred way to handle things.
+
+2. Another user gets impatient and calls the bump procedure. This
+   procedure checks if the user corresponding to the indicator is
+   still active and if necessary sets the indicator to an appropriate
+   value.
+   
+Activity is monitored via a thread that keeps refreshing an expiring
+value in Redis.
+
+Tools
+-----
+The state of users and queues can be monitered by inspection of redis
+values and subscription to redis channels.
+
 Usage
 -----
 

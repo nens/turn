@@ -5,7 +5,9 @@ Changelog of turn
 0.2 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Documentation adjustments.
+
+- Move console stuff to separate module.
 
 
 0.1.1 (2015-04-23)
