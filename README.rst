@@ -42,6 +42,7 @@ Inspection can be done using the console script:
     This shows up in status reports and messages.              5
 
 .. code::
+
     $ turn follow my_valuable_resource
     my_valuable_resource: 5 drawn by "This shows up in status reports and messages."
     my_valuable_resource: 5 starts
