@@ -3,7 +3,7 @@ Turn
 
 Introduction
 ------------
-Turn is a resource-locking queue system using python and redis.
+Turn is a shared-resource-locking queue system using python and redis.
 
 It is inspired on a the queueing system that is sometimes found in small
 shops, consisting of a number dispener and a wall indicator.
@@ -57,7 +57,7 @@ Basic usage goes like this::
     import turn
 
     # A server represents a particular redis client
-    server = turn.Server()
+    server = turn.Server(host='localhost', port=6379, db=0)
 
     resource = 'my_valuable_resource'
     label = 'This shows up in messages.'
