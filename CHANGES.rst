@@ -5,7 +5,13 @@ Changelog of turn
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Patience adjusted to seconds
+
+- PubSub connections closed automatically
+
+- Make patience an argument of lock()
+
+- Docs updated
 
 
 0.2 (2015-04-28)

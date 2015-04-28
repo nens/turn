@@ -63,15 +63,22 @@ def reset(resources, *args, **kwargs):
         resources = find_resources(client)
 
     for resource in resources:
-        # do not reset when there is a queue
         keys = Keys(resource)
-        indicator, dispenser = map(int, client.mget(keys.indicator,
-                                                    keys.dispenser))
-        if dispenser - indicator + 1:
-            print('{} is busy.'.format(resource))
+
+        # investigate sequences
+        values = client.mget(keys.indicator, keys.dispenser)
+        try:
+            indicator, dispenser = map(int, values)
+        except TypeError:
+            print('"{}" is not present.'.format(resource))
             continue
 
-        # do not reset when someone is incoming
+        # do not reset when there is a queue
+        if dispenser - indicator + 1:
+            print('"{}" is busy.'.format(resource))
+            continue
+
+        # reset, except when someone is incoming
         with client.pipeline() as pipe:
             try:
                 pipe.watch(keys.dispenser)
@@ -155,7 +162,11 @@ def test(resources, *args, **kwargs):
                 break
             label = 'Dummy workload taking {:.2f} s'.format(period)
             # execute
-            with locker.lock(resource=resource, label=label):
+            kwargs = {'expire': 5,
+                      'patience': 1,
+                      'label': label,
+                      'resource': resource}
+            with locker.lock(**kwargs):
                 value = '{:x}'.format(random.getrandbits(128))
                 values[resource] = value
                 time.sleep(period)
