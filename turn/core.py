@@ -14,7 +14,6 @@ import threading
 
 import redis
 
-PATIENCE = 6000   # time in milliseconds in queue before bumping
 PREFIX = 'turn'  # prefix for all redis keys
 
 
@@ -100,7 +99,13 @@ class Queue(object):
         self.client = client
         self.resource = resource
         self.keys = Keys(resource)
-        self.subscription = Subscription(client, self.keys.internal)
+
+    def __enter__(self):
+        self.subscription = Subscription(self.client, self.keys.internal)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.subscription.close()
 
     @contextlib.contextmanager
     def draw(self, label, expire):
@@ -133,14 +138,14 @@ class Queue(object):
         self.client.set(self.keys.indicator, number)
         self.announce(number)
 
-    def wait(self, number):
+    def wait(self, number, patience):
         """ Waits and resets if necessary. """
         # inspect indicator for our number
         waiting = int(self.client.get(self.keys.indicator)) != number
 
         # wait until someone announces our number
         while waiting:
-            message = self.subscription.listen(PATIENCE)
+            message = self.subscription.listen(patience)
             if message is None:
                 # timeout beyond patience, bump and try again
                 self.message('{} bumps'.format(number))
@@ -203,7 +208,7 @@ class Locker(object):
         self.client = self.cache[key]
 
     @contextlib.contextmanager
-    def lock(self, resource, label='', expire=60):
+    def lock(self, resource, label='', expire=10, patience=20):
         """
         Lock a resource.
 
@@ -211,7 +216,7 @@ class Locker(object):
         :param label: String label to attach
         :param expire: int seconds
         """
-        queue = Queue(client=self.client, resource=resource)
-        with queue.draw(label=label, expire=expire) as number:
-            queue.wait(number)
-            yield
+        with Queue(client=self.client, resource=resource) as queue:
+            with queue.draw(label=label, expire=expire) as number:
+                queue.wait(number=number, patience=patience)
+                yield
