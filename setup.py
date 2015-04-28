@@ -20,7 +20,7 @@ tests_require = [
 
 setup(name='turn',
       version=version,
-      description=('Turn is a shared-resource-locking '
+      description=('A shared-resource-locking '
                    'queue system using python and redis.'),
       long_description=long_description,
       # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
