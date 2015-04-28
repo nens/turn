@@ -145,7 +145,7 @@ def test(resources, *args, **kwargs):
     """
     # this only works with resources
     if not resources:
-        return
+        return 0
 
     values = {}
 
