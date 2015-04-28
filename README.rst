@@ -4,7 +4,9 @@ Turn
 
 Introduction
 ------------
-Turn is a shared-resource-locking queue system using python and Redis.
+Turn is a shared-resource-locking queue system using python and Redis. Use
+it in separate programs that acess the same shared resource to make
+sure each program waits for its turn to handle the resource.
 
 It is inspired on a the queueing system that is sometimes found in small
 shops, consisting of a number dispener and a wall indicator.
@@ -19,7 +21,7 @@ of queues, and listening to message channels for one or more resources.
 Installation
 ------------
 
-Installation is straightforward::
+Install turn with pip::
 
     $ pip install turn
 
@@ -33,10 +35,10 @@ via INCR on a Redis value, called the dispenser. The lock is acquired
 only if another value, called the indicator, corresponds to the unique
 serial number.
 
-There are two ways for the indicator to change.
+There are two mechanisms that can change the indicator:
 
-1. The user with the corresponding serial number is done with the
-   modification and increases the number, notifying any other subscribed
+1. The user with the corresponding serial number is finished acting on the
+   shared resource and increases the number, notifying any other subscribed
    waiting users. This is the preferred way to handle things.
 
 2. Another user gets impatient and calls the bump procedure. This
@@ -44,8 +46,10 @@ There are two ways for the indicator to change.
    still active and if necessary sets the indicator to an appropriate
    value.
    
-Activity is monitored via a thread that keeps refreshing an expiring
-value in Redis.
+Activity is monitored via an expiring key-value pair in Redis. The turn
+library automatically arranges a thread that keeps updating the expiration
+time, to make sure the presence does not expire during waiting for,
+or handling of the resource.
 
 Tools
 -----
