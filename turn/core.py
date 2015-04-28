@@ -57,13 +57,11 @@ class Subscription(object):
     def listen(self, timeout=None):
         """
         redis-py master branch supports timeout in pubsub.get_message()
-        but until it gets released select.poll is used.
+        but until it gets released select.select is used.
         """
         socket = self.pubsub.connection._sock
-        poll = select.poll()
-        poll.register(socket, select.POLLIN)
-        events = poll.poll(timeout)
-        if not events:
+        rlist, wlist, xlist = select.select([socket], [], [], timeout)
+        if not rlist:
             return None
         return self.pubsub.get_message()
 
@@ -97,7 +95,7 @@ class Keeper(object):
 
 
 class Queue(object):
-    """ Server initialized for specific resource. """
+    """ Locker initialized for specific resource. """
     def __init__(self, client, resource):
         self.client = client
         self.resource = resource
@@ -190,8 +188,8 @@ class Queue(object):
         self.announce(number)
 
 
-class Server(object):
-    """ Wraps a redis server. """
+class Locker(object):
+    """ Wraps a redis client. """
     cache = {}
 
     def __init__(self, *args, **kwargs):

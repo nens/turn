@@ -9,6 +9,10 @@ Changelog of turn
 
 - Move console stuff to separate module.
 
+- Use select and not poll, to make increase platform independency.
+
+- Use the name 'Locker' for the reusable object that locks things.
+
 
 0.1.1 (2015-04-23)
 ------------------

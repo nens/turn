@@ -6,5 +6,5 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 from __future__ import division
 
-from .core import Server
-Server  # pyflakes
+from .core import Locker
+Locker  # pyflakes

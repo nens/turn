@@ -22,7 +22,7 @@ def get_parser():
         description=__doc__,
     )
 
-    # server
+    # connection to redis server
     parser.add_argument('--host', default='localhost')
     parser.add_argument('--port', default=6379, type=int)
     parser.add_argument('--db', default=0, type=int)

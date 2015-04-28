@@ -20,7 +20,7 @@ import threading
 
 from .core import Keys
 from .core import Subscription
-from .core import Server
+from .core import Locker
 
 SEPARATOR = 60 * '-'
 
@@ -134,7 +134,7 @@ def status(resources, *args, **kwargs):
 
 def test(resources, *args, **kwargs):
     """
-    Indefinitely add jobs to server.
+    Indefinitely add jobs to locker.
     """
     # this only works with resources
     if not resources:
@@ -143,7 +143,7 @@ def test(resources, *args, **kwargs):
     values = {}
 
     # target for the test threads
-    def target(queue, server):
+    def target(queue, locker):
         """
         Test thread target.
         """
@@ -155,7 +155,7 @@ def test(resources, *args, **kwargs):
                 break
             label = 'Dummy workload taking {:.2f} s'.format(period)
             # execute
-            with server.lock(resource=resource, label=label):
+            with locker.lock(resource=resource, label=label):
                 value = '{:x}'.format(random.getrandbits(128))
                 values[resource] = value
                 time.sleep(period)
@@ -167,7 +167,7 @@ def test(resources, *args, **kwargs):
     for resource in resources:
         thread = threading.Thread(
             target=target,
-            kwargs={'queue': queue, 'server': Server(*args, **kwargs)},
+            kwargs={'queue': queue, 'locker': Locker(*args, **kwargs)},
         )
         thread.start()
         threads.append(thread)
