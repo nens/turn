@@ -214,6 +214,7 @@ class Locker(object):
         :param resource: String corresponding to resource type
         :param label: String label to attach
         :param expire: int seconds
+        :param patience: int seconds
         """
         with Queue(client=self.client, resource=resource) as queue:
             with queue.draw(label=label, expire=expire) as number:
