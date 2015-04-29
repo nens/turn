@@ -5,7 +5,9 @@ Changelog of turn
 0.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- All code covered by tests.
+
+- Extend docs.
 
 
 0.2.1 (2015-04-28)
