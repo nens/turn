@@ -51,7 +51,6 @@ class Subscription(object):
         """ Subscribe and receive subscription message. """
         self.pubsub = client.pubsub()
         self.pubsub.subscribe(*channels)
-        self.pubsub.get_message()
 
     def listen(self, timeout=None):
         """
@@ -119,7 +118,7 @@ class Queue(object):
             number = pipe.execute()[-1]
 
         # publish for humans
-        self.message('{} drawn by "{}"'.format(number, label))
+        self.message('{} assigned to "{}"'.format(number, label))
 
         # launch keeper
         kwargs = {'client': self.client, 'key': self.keys.key(number)}
@@ -157,7 +156,7 @@ class Queue(object):
             waiting = self.keys.number(message['data']) != number
 
         # our turn now
-        self.message('{} starts'.format(number))
+        self.message('{} started'.format(number))
 
     def message(self, text):
         """ Public message. """
@@ -167,7 +166,7 @@ class Queue(object):
     def announce(self, number):
         """ Announce an indicator change on both channels. """
         self.client.publish(self.keys.internal, self.keys.key(number))
-        self.message('{} can start now'.format(number))
+        self.message('{} granted'.format(number))
 
     def bump(self):
         """ Fix indicator in case of unnanounced departments. """
@@ -208,7 +207,7 @@ class Locker(object):
         self.client = self.cache[key]
 
     @contextlib.contextmanager
-    def lock(self, resource, label='', expire=10, patience=20):
+    def lock(self, resource, label='', expire=60, patience=60):
         """
         Lock a resource.
 

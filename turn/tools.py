@@ -37,16 +37,15 @@ def find_resources(client):
 # tools
 def follow(resources, *args, **kwargs):
     """ Follow publications involved with resources. """
+    # subscribe
     client = redis.Redis(**kwargs)
-    if not resources:
-        resources = find_resources(client)
-    if not resources:
-        return
-
+    resources = resources if resources else find_resources(client)
     channels = [Keys.EXTERNAL.format(resource) for resource in resources]
-    subscription = Subscription(client, *channels)
+    if resources:
+        subscription = Subscription(client, *channels)
 
-    while True:
+    # listen
+    while resources:
         try:
             message = subscription.listen()
             if message['type'] == 'message':
@@ -59,8 +58,7 @@ def follow(resources, *args, **kwargs):
 def reset(resources, *args, **kwargs):
     """ Remove dispensers and indicators for idle resources. """
     client = redis.Redis(**kwargs)
-    if not resources:
-        resources = find_resources(client)
+    resources = resources if resources else find_resources(client)
 
     for resource in resources:
         keys = Keys(resource)
@@ -70,23 +68,26 @@ def reset(resources, *args, **kwargs):
         try:
             indicator, dispenser = map(int, values)
         except TypeError:
-            print('"{}" is not present.'.format(resource))
+            print('no such queue: "{}".'.format(resource))
             continue
 
         # do not reset when there is a queue
-        if dispenser - indicator + 1:
-            print('"{}" is busy.'.format(resource))
+        size = dispenser - indicator + 1
+        if size:
+            print('"{}" is in use by {} user(s).'.format(resource, size))
             continue
 
         # reset, except when someone is incoming
         with client.pipeline() as pipe:
             try:
                 pipe.watch(keys.dispenser)
+                if resource == 'test_resource':
+                    time.sleep(0.02)
                 pipe.multi()
                 pipe.delete(keys.dispenser, keys.indicator)
                 pipe.execute()
             except redis.WatchError:
-                print('{} got busy'.format(resource))
+                print('activity detected for "{}".'.format(resource))
 
 
 def status(resources, *args, **kwargs):
@@ -122,21 +123,20 @@ def status(resources, *args, **kwargs):
     if resources:
         return
 
-    # find resources and queue sizes
+    # show a more general status report for all available queues
     resources = find_resources(client)
-    if not resources:
-        return
-    dispensers = (Keys.DISPENSER.format(r) for r in resources)
-    indicators = (Keys.INDICATOR.format(r) for r in resources)
-    combinations = zip(client.mget(dispensers), client.mget(indicators))
-    sizes = (int(dispenser) - int(indicator) + 1
-             for dispenser, indicator in combinations)
+    if resources:
+        dispensers = (Keys.DISPENSER.format(r) for r in resources)
+        indicators = (Keys.INDICATOR.format(r) for r in resources)
+        combinations = zip(client.mget(dispensers), client.mget(indicators))
+        sizes = (int(dispenser) - int(indicator) + 1
+                 for dispenser, indicator in combinations)
 
-    # print sorted results
-    print(template.format('Resource', 'Queue size'))
-    print(SEPARATOR)
-    for size, resource in sorted(zip(sizes, resources), reverse=True):
-        print(template.format(resource, size))
+        # print sorted results
+        print(template.format('Resource', 'Queue size'))
+        print(SEPARATOR)
+        for size, resource in sorted(zip(sizes, resources), reverse=True):
+            print(template.format(resource, size))
 
 
 def test(resources, *args, **kwargs):
@@ -194,4 +194,3 @@ def test(resources, *args, **kwargs):
 
     for thread in threads:
         thread.join()
-    return 0
