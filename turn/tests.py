@@ -65,11 +65,15 @@ class TestCore(TestBase):
         with self.locker.lock(**self.kwargs):
             raise RuntimeError()
 
-    def lock_hastily(self):
+    def lock_impatient(self):
         kwargs = self.kwargs.copy()
-        kwargs['patience'] = 0
+        kwargs['patience'] = 0.01
         with self.locker.lock(**kwargs):
             pass
+
+    def lock_long(self):
+        with self.locker.lock(**self.kwargs):
+            time.sleep(0.02)
 
     def test_subscription(self):
         client = self.locker.client
@@ -100,8 +104,8 @@ class TestCore(TestBase):
         tools.reset(resources=[self.resource])
 
     def test_patience(self):
-        thread1 = threading.Thread(target=self.lock)
-        thread2 = threading.Thread(target=self.lock_hastily)
+        thread1 = threading.Thread(target=self.lock_long)
+        thread2 = threading.Thread(target=self.lock_impatient)
         thread1.start()
         thread2.start()
         thread1.join()
@@ -164,6 +168,7 @@ class TestTools(TestBase):
 
     def test_reset_busy(self):
         with self.locker.lock(**self.kwargs):
+            time.sleep(0.01)
             tools.reset(resources=[self.resource])
         expected = '"test_resource" is in use by 1 user(s).\n'
         self.assertEqual(sys.stdout.getvalue(), expected)
@@ -184,6 +189,7 @@ class TestTools(TestBase):
             pass
 
         with self.locker.lock(**self.kwargs):
+            time.sleep(0.01)
             tools.status(resources=[self.resource, other_resource])
 
         # cleanup the other resource
