@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 import os
+import random
 import signal
 import sys
 import threading
@@ -30,50 +31,54 @@ class TestBase(unittest.TestCase):
         cls.resource = 'test_resource'
         cls.label = 'test_label'
         cls.locker = core.Locker()
-        cls.kwargs = {'expire': 2,
-                      'patience': 1,
+        cls.kwargs = {'patience': 0.01,
                       'label': cls.label,
                       'resource': cls.resource}
 
     @classmethod
-    def lock(cls, delay=0):
-        time.sleep(delay)
+    def lock(cls):
         with cls.locker.lock(**cls.kwargs):
             pass
 
     @classmethod
     def tearDownClass(cls):
+        cls.cycle()  # one cycle to silently leave without traces
+
+    @classmethod
+    def cycle(cls):
+        # creates or activates and removes the test queue
         cls.lock()
+        time.sleep(0.01)
         tools.reset(resources=[cls.resource])
+        time.sleep(0.01)
+
+    # helpers
+    def kill(self):
+        os.kill(os.getpid(), signal.SIGINT)
+
+    def kill_later(self):
+        time.sleep(0.01)
+        self.kill()
 
 
 class TestCore(TestBase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.resource = 'test_resource'
-        cls.label = 'test_label'
-        cls.locker = core.Locker()
-        cls.kwargs = {
-            'resource': cls.resource,
-            'label': cls.label,
-            'expire': 2,
-            'patience': 1,
-        }
-
-    def crash(self):
+    def lock_and_crash(self):
         with self.locker.lock(**self.kwargs):
             raise RuntimeError()
 
-    def lock_impatient(self):
-        kwargs = self.kwargs.copy()
-        kwargs['patience'] = 0.01
-        with self.locker.lock(**kwargs):
-            pass
+    def lock_verify(self, sleep):
+        with self.locker.lock(**self.kwargs):
+            value = '{:x}'.format(random.getrandbits(128))
+            self.value = value
+            time.sleep(0.01)
+            self.assertEqual(value, self.value)
+
+    def lock_short(self):
+        self.lock_verify(0.01)
 
     def lock_long(self):
-        with self.locker.lock(**self.kwargs):
-            time.sleep(0.02)
+        self.lock_verify(0.02)
 
     def test_subscription(self):
         client = self.locker.client
@@ -99,25 +104,39 @@ class TestCore(TestBase):
         keeper.close()
         self.assertIsNone(client.get(key))
 
-    def test_crash(self):
-        self.assertRaises(RuntimeError, self.crash)
+    def test_reset_dead_queue(self):
+        self.assertRaises(RuntimeError, self.lock_and_crash)
         tools.reset(resources=[self.resource])
 
-    def test_patience(self):
-        thread1 = threading.Thread(target=self.lock_long)
-        thread2 = threading.Thread(target=self.lock_impatient)
+    def test_crash_going(self):
+        thread1 = threading.Thread(target=self.lock_short)
+        thread2 = threading.Thread(target=self.lock_short)
         thread1.start()
         thread2.start()
+        self.assertRaises(RuntimeError, self.lock_and_crash)
+        tools.reset(resources=[self.resource])
         thread1.join()
         thread2.join()
+        self.cycle()
+
+    def test_crash_waiting(self):
+        thread1 = threading.Thread(target=self.lock_short)
+        thread2 = threading.Thread(target=self.lock_short)
+        thread3 = threading.Thread(target=self.kill_later)
+        thread1.start()
+        thread2.start()
+        thread3.start()
+        self.assertRaises(KeyboardInterrupt, self.lock_long)
+        thread1.join()
+        thread2.join()
+        thread3.join()
+        self.cycle()
 
 
 class TestTools(TestBase):
 
     def setUp(self):
-        # one cycle to have a predictable state
-        self.lock()
-        tools.reset(resources=[self.resource])
+        self.cycle()  # one cycle to have a predictable state
 
         # swap stdout with fresh StringIO
         self.stdout, sys.stdout = sys.stdout, StringIO()
@@ -126,36 +145,37 @@ class TestTools(TestBase):
         # swap back
         self.stdout, sys.stdout = sys.stdout, self.stdout
 
-    def kill(self, pid):
+    # helpers
+    def lock_later(self):
         time.sleep(0.01)
-        os.kill(pid, signal.SIGINT)
+        self.lock()
 
-    def interact(self, pid):
-        self.lock(0.01)
-        self.kill(pid)
+    def lock_and_kill_later(self):
+        self.lock_later()
+        self.kill_later()
 
+    # follow
     def test_follow(self):
-        # run, lock, kill
-        thread = threading.Thread(target=self.interact, args=[os.getpid()])
+        thread = threading.Thread(target=self.lock_and_kill_later)
         thread.start()
         tools.follow(resources=[self.resource])
         thread.join()
-
-        # join thread, swap back, evaluate
-        self.assertEqual(sys.stdout.getvalue(), (
+        expected = (
             'test_resource: 1 assigned to "test_label"\n'
             'test_resource: 1 started\n'
             'test_resource: 1 completed by "test_label"\n'
             'test_resource: 2 granted\n'
-        ))
+        )
+        self.assertEqual(sys.stdout.getvalue(), expected)
 
     def test_follow_any(self):
         self.lock()  # there must be something to follow
-        thread = threading.Thread(target=self.kill, args=[os.getpid()])
+        thread = threading.Thread(target=self.kill_later)
         thread.start()
         tools.follow(resources=[])
         thread.join()
 
+    # reset
     def test_reset_success(self):
         self.lock()
         tools.reset(resources=[self.resource])
@@ -175,13 +195,14 @@ class TestTools(TestBase):
 
     def test_reset_watch(self):
         self.lock()  # as opposed to the no queue case
-        thread = threading.Thread(target=self.lock, args=[0.01])
+        thread = threading.Thread(target=self.lock_later)
         thread.start()
         tools.reset(resources=[self.resource], test=True)
         thread.join()
         expected = 'Activity detected for "test_resource".\n'
         self.assertEqual(sys.stdout.getvalue(), expected)
 
+    # status
     def test_status(self):
         # need another resource to print the white line
         other_resource = 'test_resource_other'

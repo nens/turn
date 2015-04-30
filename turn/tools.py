@@ -12,7 +12,6 @@ from __future__ import division
 
 import re
 import redis
-import sys
 import time
 
 from .core import Keys
@@ -46,8 +45,7 @@ def follow(resources, *args, **kwargs):
         try:
             message = subscription.listen()
             if message['type'] == 'message':
-                sys.stdout.write('{}\n'.format(message['data']))
-                sys.stdout.flush()
+                print(message['data'])
         except KeyboardInterrupt:
             break
 
