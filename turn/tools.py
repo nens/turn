@@ -57,6 +57,7 @@ def follow(resources, *args, **kwargs):
 
 def reset(resources, *args, **kwargs):
     """ Remove dispensers and indicators for idle resources. """
+    test = kwargs.pop('test', False)
     client = redis.Redis(**kwargs)
     resources = resources if resources else find_resources(client)
 
@@ -81,7 +82,7 @@ def reset(resources, *args, **kwargs):
         with client.pipeline() as pipe:
             try:
                 pipe.watch(keys.dispenser)
-                if resource == 'test_resource':
+                if test:
                     time.sleep(0.02)
                 pipe.multi()
                 pipe.delete(keys.dispenser, keys.indicator)

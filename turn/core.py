@@ -80,8 +80,10 @@ class Keeper(object):
         client.set(key, label, ex=expire)
 
         # keep key alive
-        while not self.leave.wait(timeout=expire - 1):
+        while True:
             client.expire(key, time=expire)
+            if self.leave.wait(timeout=expire - 1):
+                break
 
         # revoke presence
         client.delete(key)

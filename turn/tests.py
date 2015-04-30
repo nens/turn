@@ -121,7 +121,7 @@ class TestTools(TestBase):
         self.lock()  # as opposed to the no queue case
         thread = threading.Thread(target=self.lock, args=[0.01])
         thread.start()
-        tools.reset(resources=[self.resource])
+        tools.reset(resources=[self.resource], test=True)
         thread.join()
         expected = 'activity detected for "test_resource".\n'
         self.assertEqual(sys.stdout.getvalue(), expected)
@@ -202,7 +202,6 @@ class TestCore(TestBase):
         keeper = core.Keeper(client=client, key=key, label=label, expire=2)
         time.sleep(0.01)
         self.assertEqual(client.get(key), label)
-        time.sleep(1.1)
         keeper.close()
         self.assertIsNone(client.get(key))
 
