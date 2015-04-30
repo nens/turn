@@ -7,6 +7,8 @@ Changes
 
 - Add more help to the console script.
 
+- Add serious tests regarding safety.
+
 
 0.3.1 (2015-04-30)
 ------------------
