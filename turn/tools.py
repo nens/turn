@@ -19,8 +19,9 @@ import time
 import threading
 
 from .core import Keys
-from .core import Subscription
 from .core import Locker
+from .core import Queue
+from .core import Subscription
 
 SEPARATOR = 60 * '-'
 
@@ -62,17 +63,21 @@ def reset(resources, *args, **kwargs):
     resources = resources if resources else find_resources(client)
 
     for resource in resources:
-        keys = Keys(resource)
-
         # investigate sequences
-        values = client.mget(keys.indicator, keys.dispenser)
+        queue = Queue(client=client, resource=resource)
+        values = client.mget(queue.keys.indicator, queue.keys.dispenser)
         try:
             indicator, dispenser = map(int, values)
         except TypeError:
             print('no such queue: "{}".'.format(resource))
             continue
 
-        # do not reset when there is a queue
+        # do a bump if there appears to be a queue
+        if dispenser - indicator + 1:
+            queue.message('Reset tool bumps.')
+            indicator = queue.bump()
+
+        # do not reset when there is still a queue
         size = dispenser - indicator + 1
         if size:
             print('"{}" is in use by {} user(s).'.format(resource, size))
@@ -81,11 +86,11 @@ def reset(resources, *args, **kwargs):
         # reset, except when someone is incoming
         with client.pipeline() as pipe:
             try:
-                pipe.watch(keys.dispenser)
+                pipe.watch(queue.keys.dispenser)
                 if test:
                     time.sleep(0.02)
                 pipe.multi()
-                pipe.delete(keys.dispenser, keys.indicator)
+                pipe.delete(queue.keys.dispenser, queue.keys.indicator)
                 pipe.execute()
             except redis.WatchError:
                 print('activity detected for "{}".'.format(resource))

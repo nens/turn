@@ -199,7 +199,7 @@ class TestCore(TestBase):
         client = self.locker.client
         key = 'test_key'
         label = 'test_label'
-        keeper = core.Keeper(client=client, key=key, label=label, expire=2)
+        keeper = core.Keeper(client=client, key=key, label=label, expire=60)
         time.sleep(0.01)
         self.assertEqual(client.get(key), label)
         keeper.close()
@@ -207,3 +207,4 @@ class TestCore(TestBase):
 
     def test_crash(self):
         self.assertRaises(RuntimeError, self.crash)
+        tools.reset(resources=[self.resource])

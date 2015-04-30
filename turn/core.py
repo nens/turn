@@ -100,13 +100,7 @@ class Queue(object):
         self.client = client
         self.resource = resource
         self.keys = Keys(resource)
-
-    def __enter__(self):
         self.subscription = Subscription(self.client, self.keys.internal)
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.subscription.close()
 
     @contextlib.contextmanager
     def draw(self, label, expire):
@@ -173,25 +167,32 @@ class Queue(object):
     def bump(self):
         """ Fix indicator in case of unnanounced departments. """
         # read client
-        indicator, dispenser = map(int,
-                                   self.client.mget(self.keys.indicator,
-                                                    self.keys.dispenser))
+        values = self.client.mget(self.keys.indicator, self.keys.dispenser)
+        indicator, dispenser = map(int, values)
 
         # determine active users
         numbers = xrange(indicator, dispenser + 1)
         keys = map(self.keys.key, numbers)
         pairs = zip(keys, self.client.mget(*keys))
 
-        # determine number of first active user
-        number = next(self.keys.number(key)
-                      for key, value in pairs if value is not None)
+        try:
+            # determine number of first active user
+            number = next(self.keys.number(key)
+                          for key, value in pairs if value is not None)
+        except:
+            # set number to next result of incr on dispenser
+            number = dispenser + 1
 
         # set indicator to it if necessary
         if number != indicator:
             self.client.set(self.keys.indicator, number)
 
-        # announce it anyway
+        # announce and return it anyway
         self.announce(number)
+        return number
+
+    def close(self):
+        self.subscription.close()
 
 
 class Locker(object):
@@ -218,7 +219,8 @@ class Locker(object):
         :param expire: int seconds
         :param patience: int seconds
         """
-        with Queue(client=self.client, resource=resource) as queue:
-            with queue.draw(label=label, expire=expire) as number:
-                queue.wait(number=number, patience=patience)
-                yield
+        queue = Queue(client=self.client, resource=resource)
+        with queue.draw(label=label, expire=expire) as number:
+            queue.wait(number=number, patience=patience)
+            yield
+        queue.close()
