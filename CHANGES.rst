@@ -2,7 +2,7 @@ Changes
 =======
 
 
-0.4 (unreleased)
+0.4 (2015-04-30)
 ----------------
 
 - Add more help to the console script.
