@@ -2,7 +2,7 @@ Changelog of turn
 ===================================================
 
 
-0.3 (unreleased)
+0.3 (2015-04-30)
 ----------------
 
 - All code covered by tests.
