@@ -10,16 +10,12 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 from __future__ import division
 
-import Queue as queueing
-import random
 import re
 import redis
 import sys
 import time
-import threading
 
 from .core import Keys
-from .core import Locker
 from .core import Queue
 from .core import Subscription
 
@@ -69,7 +65,7 @@ def reset(resources, *args, **kwargs):
         try:
             indicator, dispenser = map(int, values)
         except TypeError:
-            print('no such queue: "{}".'.format(resource))
+            print('No such queue: "{}".'.format(resource))
             continue
 
         # do a bump if there appears to be a queue
@@ -93,7 +89,7 @@ def reset(resources, *args, **kwargs):
                 pipe.delete(queue.keys.dispenser, queue.keys.indicator)
                 pipe.execute()
             except redis.WatchError:
-                print('activity detected for "{}".'.format(resource))
+                print('Activity detected for "{}".'.format(resource))
 
 
 def status(resources, *args, **kwargs):
@@ -143,60 +139,3 @@ def status(resources, *args, **kwargs):
         print(SEPARATOR)
         for size, resource in sorted(zip(sizes, resources), reverse=True):
             print(template.format(resource, size))
-
-
-def test(resources, *args, **kwargs):
-    """
-    Indefinitely add jobs to locker.
-    """
-    # this only works with resources
-    if not resources:
-        return 0
-
-    values = {}
-
-    # target for the test threads
-    def target(queue, locker):
-        """
-        Test thread target.
-        """
-        while True:
-            # pick tasks from queue
-            try:
-                resource, period = queue.get()
-            except TypeError:
-                break
-            label = 'Dummy workload taking {:.2f} s'.format(period)
-            # execute
-            kwargs = {'expire': 5,
-                      'patience': 1,
-                      'label': label,
-                      'resource': resource}
-            with locker.lock(**kwargs):
-                value = '{:x}'.format(random.getrandbits(128))
-                values[resource] = value
-                time.sleep(period)
-                assert values[resource] == value
-
-    # launch threads
-    threads = []
-    queue = queueing.Queue(maxsize=1)
-    for resource in resources:
-        thread = threading.Thread(
-            target=target,
-            kwargs={'queue': queue, 'locker': Locker(*args, **kwargs)},
-        )
-        thread.start()
-        threads.append(thread)
-
-    try:
-        while True:
-            queue.put((random.choice(resources), .1 + .1 * random.random()))
-    except KeyboardInterrupt:
-        pass
-
-    for thread in threads:
-        queue.put(None)
-
-    for thread in threads:
-        thread.join()

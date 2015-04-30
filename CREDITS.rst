@@ -1,4 +1,4 @@
 Credits
 =======
 
-- Arjan Verkerk started this library
+- Written by Arjan Verkerk

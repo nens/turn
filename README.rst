@@ -9,7 +9,7 @@ it in separate programs that acess the same shared resource to make
 sure each program waits for its turn to handle the resource.
 
 It is inspired on a the queueing system that is sometimes found in small
-shops, consisting of a number dispener and a wall indicator.
+shops, consisting of a serial number dispenser and a wall indicator.
 
 Turn comes with a commandline tool for resetting and direct inspection
 of queues, and listening to message channels for one or more resources.

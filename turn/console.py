@@ -30,7 +30,7 @@ def get_parser():
     # tools
     parser.add_argument(
         'command',
-        choices=('test', 'follow', 'reset', 'status'),
+        choices=('follow', 'reset', 'status'),
 
     )
     parser.add_argument(
