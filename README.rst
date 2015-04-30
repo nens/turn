@@ -91,7 +91,8 @@ Queues can also be reset (removed) from redis using ``turn reset``
 optionally followed by resources queues to reset. Reset without
 resource names resets all available queues in the server. If a queue
 for a resource shows activity, it will not be reset and in addition a
-message will be produced.
+message will be produced. A reset command for a resource will also 'bump'
+the queue for that resource.
 
 
 Implementation details
