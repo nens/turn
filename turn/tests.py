@@ -181,6 +181,12 @@ class TestCore(TestBase):
         with self.locker.lock(**self.kwargs):
             raise RuntimeError()
 
+    def lock_hastily(self):
+        kwargs = self.kwargs.copy()
+        kwargs['patience'] = 0
+        with self.locker.lock(**kwargs):
+            pass
+
     def test_subscription(self):
         client = self.locker.client
         channel = 'test_channel'
@@ -208,3 +214,11 @@ class TestCore(TestBase):
     def test_crash(self):
         self.assertRaises(RuntimeError, self.crash)
         tools.reset(resources=[self.resource])
+
+    def test_patience(self):
+        thread1 = threading.Thread(target=self.lock)
+        thread2 = threading.Thread(target=self.lock_hastily)
+        thread1.start()
+        thread2.start()
+        thread1.join()
+        thread2.join()
