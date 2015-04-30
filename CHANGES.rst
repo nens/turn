@@ -5,13 +5,13 @@ Changes
 0.4 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Add more help to the console script.
 
 
 0.3.1 (2015-04-30)
 ------------------
 
-- Nothing changed yet.
+- Reshuffled of tests and docs.
 
 
 0.3 (2015-04-30)
@@ -25,13 +25,13 @@ Changes
 0.2.1 (2015-04-28)
 ------------------
 
-- Patience adjusted to seconds
+- Patience adjusted to seconds.
 
-- PubSub connections closed automatically
+- PubSub connections closed automatically.
 
-- Make patience an argument of lock()
+- Make patience an argument of lock().
 
-- Docs updated
+- Docs updated.
 
 
 0.2 (2015-04-28)
@@ -49,7 +49,7 @@ Changes
 0.1.1 (2015-04-23)
 ------------------
 
-- U can use pip now.
+- You can use pip now.
 
 
 0.1 (2015-04-23)

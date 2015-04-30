@@ -1,5 +1,28 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 # -*- coding: utf-8 -*-
+"""
+turn follow
+   print queue activity for all existing resources
+
+turn follow RESOURCE [RESOURCE ...]
+   print queue activity for given resources
+
+turn status
+    print queue summary for all existing resources
+
+turn status RESOURCE [RESOURCE ...]
+    print queue details for given resources
+
+turn reset
+    try bump & reset on all existing resources
+
+turn reset RESOURCE [RESOURCE ...]
+    try bump & reset on given resources
+
+
+
+
+"""
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -28,17 +51,8 @@ def get_parser():
     parser.add_argument('--db', default=0, type=int)
 
     # tools
-    parser.add_argument(
-        'command',
-        choices=('follow', 'reset', 'status'),
-
-    )
-    parser.add_argument(
-        'resources',
-        nargs='*',
-        metavar='RESOURCE',
-        help='Resources texts.',
-    )
+    parser.add_argument('command', choices=('follow', 'reset', 'status'))
+    parser.add_argument('resources', nargs='*', metavar='RESOURCE')
 
     return parser
 

@@ -47,7 +47,7 @@ expire: maximum expire value for a users presence (default 60)
 
 If a user crashes hard, its presence in the queue will be kept
 alive at most ``expire`` seconds. This value affects how often the EXPIRE
-command will be sent to redis to signal the continuing presence of a
+command will be sent to Redis to signal the continuing presence of a
 user in the queue.
 
 patience: period of waiting before bumping the queue (default 60)
@@ -87,7 +87,7 @@ any resources starts following the channels for any queue currently
 within the database. Note that new queues are not automatically added
 to the subscription.
 
-Queues can also be reset (removed) from redis using ``turn reset``
+Queues can also be reset (removed) from Redis using ``turn reset``
 optionally followed by resources queues to reset. Reset without
 resource names resets all available queues in the server. If a queue
 for a resource shows activity, it will not be reset and in addition a
