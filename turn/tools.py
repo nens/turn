@@ -11,10 +11,12 @@ from __future__ import absolute_import
 from __future__ import division
 
 import re
+import os
 import redis
 import time
 
 from .core import Keys
+from .core import Locker
 from .core import Queue
 from .core import Subscription
 
@@ -28,6 +30,15 @@ def find_resources(client):
     pattern = re.compile(Keys.DISPENSER.format('(.*)'))
     return [pattern.match(d).group(1)
             for d in client.scan_iter(wildcard)]
+
+
+def pause():
+    """ Wait for interruption signal. """
+    try:
+        while True:
+            time.sleep(7)
+    except KeyboardInterrupt:
+        return
 
 
 # tools
@@ -48,6 +59,38 @@ def follow(resources, *args, **kwargs):
                 print(message['data'])
         except KeyboardInterrupt:
             break
+
+
+def lock(resources, *args, **kwargs):
+    """ Lock resources from the command line, for example for maintenance. """
+    # all resources are locked if nothing is specified
+    if not resources:
+        client = redis.Redis(**kwargs)
+        resources = find_resources(client)
+
+    if not resources:
+        return
+
+    # the connection will be forked, too...
+    locker = Locker(**kwargs)
+    for resource in resources:
+        # fork, and onto the next resource
+        if os.fork():
+            continue
+        # this process will lock the current resource
+        label = 'Lock tool ({})'.format(os.getpid())
+        try:
+            print('{}: acquiring.'.format(resource))
+            with locker.lock(resource=resource, label=label):
+                print('{}: locked.'.format(resource))
+                pause()
+            print('{}: released.'.format(resource))
+        except KeyboardInterrupt:
+            print('{}: canceled'.format(resource))
+        exit()
+        # end of process here
+    pause()
+    time.sleep(1)  # prevent prompt before forks are completed
 
 
 def reset(resources, *args, **kwargs):

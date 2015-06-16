@@ -175,6 +175,16 @@ class TestTools(TestBase):
         tools.follow(resources=[])
         thread.join()
 
+    # lock
+    # def test_lock(self):
+    #   # thread1 = threading.Thread(target=tools.lock,
+    #                              # kwargs={'resources': [self.resource]})
+    #   # thread2 = threading.Thread(target=self.kill_later)
+    #   # thread1.start()
+    #   # thread2.start()
+    #   # thread1.join()
+    #   # thread2.join()
+
     # reset
     def test_reset_success(self):
         self.lock()

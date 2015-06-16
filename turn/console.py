@@ -51,7 +51,8 @@ def get_parser():
     parser.add_argument('--db', default=0, type=int)
 
     # tools
-    parser.add_argument('command', choices=(b'follow', b'reset', b'status'))
+    parser.add_argument('command', choices=(b'follow', b'lock',
+                                            b'reset', b'status'))
     parser.add_argument('resources', nargs='*', metavar='RESOURCE')
 
     return parser
