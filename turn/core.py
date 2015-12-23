@@ -9,7 +9,6 @@ from __future__ import division
 import contextlib
 import hashlib
 import re
-import select
 import threading
 
 import redis
@@ -53,15 +52,8 @@ class Subscription(object):
         self.pubsub.subscribe(*channels)
 
     def listen(self, timeout=None):
-        """
-        redis-py master branch supports timeout in pubsub.get_message()
-        but until it gets released select.select is used.
-        """
-        socket = self.pubsub.connection._sock
-        rlist, wlist, xlist = select.select([socket], [], [], timeout)
-        if not rlist:
-            return None
-        return self.pubsub.get_message()
+        """ Listen for messages. """
+        return self.pubsub.get_message(timeout=timeout)
 
     def close(self):
         self.pubsub.close()
@@ -171,7 +163,7 @@ class Queue(object):
         indicator, dispenser = map(int, values)
 
         # determine active users
-        numbers = xrange(indicator, dispenser + 1)
+        numbers = range(indicator, dispenser + 1)
         keys = map(self.keys.key, numbers)
         pairs = zip(keys, self.client.mget(*keys))
 
