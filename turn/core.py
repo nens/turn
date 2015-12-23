@@ -164,11 +164,7 @@ class Queue(object):
 
         # determine active users
         numbers = range(indicator, dispenser + 1)
-<<<<<<< HEAD
         keys = [self.keys.key(n) for n in numbers]
-=======
-        keys = map(self.keys.key, numbers)
->>>>>>> master
         pairs = zip(keys, self.client.mget(*keys))
 
         try:
