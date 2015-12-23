@@ -171,8 +171,8 @@ class Queue(object):
         indicator, dispenser = map(int, values)
 
         # determine active users
-        numbers = xrange(indicator, dispenser + 1)
-        keys = map(self.keys.key, numbers)
+        numbers = range(indicator, dispenser + 1)
+        keys = [self.keys.key(n) for n in numbers]
         pairs = zip(keys, self.client.mget(*keys))
 
         try:
@@ -199,13 +199,12 @@ class Locker(object):
     """ Wraps a redis client. """
     cache = {}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """ The args and kwargs are passed to Redis instance. """
-        key = hashlib.md5(str(list(args) +
-                              sorted(kwargs.items()))).hexdigest()
+        key = hashlib.md5(bytes(sorted(kwargs.items()))).hexdigest()
 
         if key not in self.cache:
-            self.cache[key] = redis.Redis(*args, **kwargs)
+            self.cache[key] = redis.Redis(decode_responses=True, **kwargs)
 
         self.client = self.cache[key]
 

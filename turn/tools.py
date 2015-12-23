@@ -42,10 +42,10 @@ def pause():
 
 
 # tools
-def follow(resources, *args, **kwargs):
+def follow(resources, **kwargs):
     """ Follow publications involved with resources. """
     # subscribe
-    client = redis.Redis(**kwargs)
+    client = redis.Redis(decode_responses=True, **kwargs)
     resources = resources if resources else find_resources(client)
     channels = [Keys.EXTERNAL.format(resource) for resource in resources]
     if resources:
@@ -65,7 +65,7 @@ def lock(resources, *args, **kwargs):
     """ Lock resources from the command line, for example for maintenance. """
     # all resources are locked if nothing is specified
     if not resources:
-        client = redis.Redis(**kwargs)
+        client = redis.Redis(decode_responses=True, **kwargs)
         resources = find_resources(client)
 
     if not resources:
@@ -96,7 +96,7 @@ def lock(resources, *args, **kwargs):
 def reset(resources, *args, **kwargs):
     """ Remove dispensers and indicators for idle resources. """
     test = kwargs.pop('test', False)
-    client = redis.Redis(**kwargs)
+    client = redis.Redis(decode_responses=True, **kwargs)
     resources = resources if resources else find_resources(client)
 
     for resource in resources:
@@ -138,7 +138,7 @@ def status(resources, *args, **kwargs):
     Print status report for zero or more resources.
     """
     template = '{:<50}{:>10}'
-    client = redis.Redis(**kwargs)
+    client = redis.Redis(decode_responses=True, **kwargs)
 
     # resource details
     for loop, resource in enumerate(resources):
