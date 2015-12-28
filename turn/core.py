@@ -193,7 +193,8 @@ class Locker(object):
 
     def __init__(self, **kwargs):
         """ The args and kwargs are passed to Redis instance. """
-        key = hashlib.md5(bytes(sorted(kwargs.items()))).hexdigest()
+        enc = str(sorted(kwargs.items())).encode('utf-8')
+        key = hashlib.md5(enc).hexdigest()
 
         if key not in self.cache:
             self.cache[key] = redis.Redis(decode_responses=True, **kwargs)

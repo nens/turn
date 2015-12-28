@@ -5,7 +5,9 @@ Changes
 0.5 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Python 3 compatible.
+
+- Add lock tool for locking multiple resources from console.
 
 
 0.4 (2015-04-30)

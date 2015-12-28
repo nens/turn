@@ -13,6 +13,7 @@ from __future__ import division
 import re
 import os
 import redis
+import signal
 import time
 
 from .core import Keys
@@ -30,15 +31,6 @@ def find_resources(client):
     pattern = re.compile(Keys.DISPENSER.format('(.*)'))
     return [pattern.match(d).group(1)
             for d in client.scan_iter(wildcard)]
-
-
-def pause():
-    """ Wait for interruption signal. """
-    try:
-        while True:
-            time.sleep(7)
-    except KeyboardInterrupt:
-        return
 
 
 # tools
@@ -71,26 +63,24 @@ def lock(resources, *args, **kwargs):
     if not resources:
         return
 
-    # the connection will be forked, too...
+    # create one process per pid
     locker = Locker(**kwargs)
-    for resource in resources:
-        # fork, and onto the next resource
-        if os.fork():
-            continue
-        # this process will lock the current resource
-        label = 'Lock tool ({})'.format(os.getpid())
-        try:
-            print('{}: acquiring.'.format(resource))
-            with locker.lock(resource=resource, label=label):
-                print('{}: locked.'.format(resource))
-                pause()
-            print('{}: released.'.format(resource))
-        except KeyboardInterrupt:
-            print('{}: canceled'.format(resource))
-        exit()
-        # end of process here
-    pause()
-    time.sleep(1)  # prevent prompt before forks are completed
+    while len(resources) > 1:
+        pid = os.fork()
+        resources = resources[:1] if pid else resources[1:]
+
+    # at this point there is only one resource - lock it down
+    resource = resources[0]
+    try:
+        print('{}: acquiring'.format(resource))
+        with locker.lock(resource, label='lock tool'):
+            print('{}: locked'.format(resource))
+            try:
+                signal.pause()
+            except KeyboardInterrupt:
+                print('{}: released'.format(resource))
+    except KeyboardInterrupt:
+        print('{}: canceled'.format(resource))
 
 
 def reset(resources, *args, **kwargs):
@@ -153,6 +143,8 @@ def status(resources, *args, **kwargs):
         # header
         template = '{:<50}{:>10}'
         indicator = client.get(keys.indicator)
+        if indicator is None:
+            continue
         print(template.format(resource, indicator))
         print(SEPARATOR)
 

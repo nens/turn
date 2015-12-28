@@ -7,6 +7,12 @@ turn follow
 turn follow RESOURCE [RESOURCE ...]
    print queue activity for given resources
 
+turn lock
+   lock all existing resources
+
+turn lock RESOURCE [RESOURCE ...]
+   lock given resources
+
 turn status
     print queue summary for all existing resources
 
@@ -18,10 +24,6 @@ turn reset
 
 turn reset RESOURCE [RESOURCE ...]
     try bump & reset on given resources
-
-
-
-
 """
 
 from __future__ import print_function

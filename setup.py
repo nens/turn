@@ -10,7 +10,7 @@ long_description = '\n\n'.join([
 
 install_requires = [
     'setuptools',
-    'redis',
+    'redis>=2.10.5',
     ],
 
 tests_require = [

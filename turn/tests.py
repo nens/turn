@@ -176,14 +176,45 @@ class TestTools(TestBase):
         thread.join()
 
     # lock
-    # def test_lock(self):
-    #   # thread1 = threading.Thread(target=tools.lock,
-    #                              # kwargs={'resources': [self.resource]})
-    #   # thread2 = threading.Thread(target=self.kill_later)
-    #   # thread1.start()
-    #   # thread2.start()
-    #   # thread1.join()
-    #   # thread2.join()
+    def test_lock(self):
+        thread = threading.Thread(target=self.kill_later)
+        thread.start()
+        tools.lock(resources=[self.resource])
+        thread.join()
+
+        expected = (
+            'test_resource: acquiring\n'
+            'test_resource: locked\n'
+            'test_resource: released\n'
+        )
+        self.assertEqual(sys.stdout.getvalue(), expected)
+
+    def test_lock_cancel(self):
+        thread = threading.Thread(target=self.kill_later)
+        thread.start()
+        with self.locker.lock(self.resource):
+            tools.lock(resources=[self.resource])
+        thread.join()
+
+        expected = (
+            'test_resource: acquiring\n'
+            'test_resource: canceled\n'
+        )
+        self.assertEqual(sys.stdout.getvalue(), expected)
+
+    def test_lock_none(self):
+        tools.lock(resources=[])
+
+    def test_lock_many(self):
+        os.fork, os_fork = lambda: 1, os.fork  # patch fork
+
+        resources = [self.resource, self.resource]
+        thread = threading.Thread(target=self.kill_later)
+        thread.start()
+        tools.lock(resources=resources)
+        thread.join()
+
+        os.fork = os_fork  # restore fork
 
     # reset
     def test_reset_success(self):
@@ -235,6 +266,9 @@ class TestTools(TestBase):
             '------------------------------------------------------------\n'
         )
         self.assertEqual(sys.stdout.getvalue(), expected)
+
+    def test_status_none(self):
+        tools.status(resources=self.resource)
 
     def test_status_any(self):
         with self.locker.lock(**self.kwargs):
