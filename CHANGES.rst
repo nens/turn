@@ -2,7 +2,7 @@ Changes
 =======
 
 
-0.5 (unreleased)
+0.5 (2015-12-28)
 ----------------
 
 - Python 3 compatible.
