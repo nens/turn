@@ -23,8 +23,6 @@ setup(name='turn',
       description=('A shared-resource-locking '
                    'queue system using python and redis.'),
       long_description=long_description,
-      # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
-      classifiers=[],
       keywords=['redis', 'queue', 'resource', 'shared'],
       author='Arjan Verkerk',
       author_email='arjan.verkerk@nelen-schuurmans.nl',
@@ -35,7 +33,18 @@ setup(name='turn',
       zip_safe=False,
       install_requires=install_requires,
       tests_require=tests_require,
-      extras_require={'test': tests_require},
+      classifiers = [
+          'Intended Audience :: Developers',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+      ],
       entry_points={
           'console_scripts': [
               'turn = turn.console:main',
