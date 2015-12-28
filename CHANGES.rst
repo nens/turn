@@ -5,7 +5,7 @@ Changes
 0.6 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Add classifiers to setup.py.
 
 
 0.5 (2015-12-28)
