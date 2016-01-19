@@ -33,6 +33,7 @@ setup(name='turn',
       zip_safe=False,
       install_requires=install_requires,
       tests_require=tests_require,
+      extras_require={'test': tests_require},
       classifiers = [
           'Intended Audience :: Developers',
           'Programming Language :: Python',
