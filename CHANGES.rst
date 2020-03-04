@@ -7,6 +7,12 @@ Changes
 
 - Add classifiers to setup.py.
 
+- Remove python2 support
+
+- Add password support
+
+- Add docker development setup
+
 
 0.5 (2015-12-28)
 ----------------

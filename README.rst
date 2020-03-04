@@ -117,3 +117,35 @@ Activity is monitored via an expiring key-value pair in Redis. The turn
 library automatically arranges a thread that keeps updating the expiration
 time, to make sure the presence does not expire during waiting for,
 or handling of the resource.
+
+
+Development installation
+------------------------
+
+For development, you can use a docker-compose setup::
+
+    $ docker-compose build --build-arg uid=`id -u` --build-arg gid=`id -g` lib
+    $ docker-compose up --no-start
+    $ docker-compose start
+    $ docker-compose exec lib bash
+
+(Re)create & activate a virtualenv::
+
+    (docker)$ rm -rf .venv
+    (docker)$ virtualenv --system-site-packages .venv
+    (docker)$ source .venv/bin/activate
+
+Install dependencies & package and run tests::
+
+    (docker)(virtualenv)$ pip install -r requirements.txt
+    (docker)(virtualenv)$ pip install -e .[test]
+    (docker)(virtualenv)$ pytest
+
+Update requirements.txt::
+    
+    (docker)$ rm -rf .venv
+    (docker)$ virtualenv --system-site-packages .venv
+    (docker)$ source .venv/bin/activate
+    (docker)(virtualenv)$ pip install .
+    (docker)(virtualenv)$ pip uninstall turn --yes
+    (docker)(virtualenv)$ pip freeze > requirements.txt

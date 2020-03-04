@@ -25,12 +25,6 @@ turn reset
 turn reset RESOURCE [RESOURCE ...]
     try bump & reset on given resources
 """
-
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-
 import argparse
 
 from . import tools
@@ -51,6 +45,7 @@ def get_parser():
     parser.add_argument('--host', default='localhost')
     parser.add_argument('--port', default=6379, type=int)
     parser.add_argument('--db', default=0, type=int)
+    parser.add_argument('--password')
 
     # tools
     parser.add_argument('command', choices=(str('follow'), str('lock'),

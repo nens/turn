@@ -1,11 +1,6 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-
 import contextlib
 import hashlib
 import re
@@ -114,7 +109,7 @@ class Queue(object):
 
         try:
             yield number
-        except:
+        except Exception:
             self.message('{} crashed!'.format(number))
             raise
         finally:
@@ -171,7 +166,7 @@ class Queue(object):
             # determine number of first active user
             number = next(self.keys.number(key)
                           for key, value in pairs if value is not None)
-        except:
+        except Exception:
             # set number to next result of incr on dispenser
             number = dispenser + 1
 

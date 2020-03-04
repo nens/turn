@@ -9,14 +9,10 @@ long_description = '\n\n'.join([
     ])
 
 install_requires = [
-    'setuptools',
     'redis>=2.10.5',
     ],
 
-tests_require = [
-    'nose',
-    'coverage',
-    ]
+tests_require = ["flake8", "ipdb", "ipython", "pytest", "pytest-cov"]
 
 setup(name='turn',
       version=version,
@@ -37,13 +33,11 @@ setup(name='turn',
       classifiers = [
           'Intended Audience :: Developers',
           'Programming Language :: Python',
-          'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.6',
-          'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.3',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],
       entry_points={

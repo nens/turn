@@ -1,11 +1,7 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-
+import io
 import os
 import random
 import signal
@@ -14,14 +10,11 @@ import threading
 import time
 import unittest
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 from turn import console
 from turn import tools
 from turn import core
+
+HOST = 'redis'
 
 
 class TestBase(unittest.TestCase):
@@ -30,7 +23,7 @@ class TestBase(unittest.TestCase):
     def setUpClass(cls):
         cls.resource = 'test_resource'
         cls.label = 'test_label'
-        cls.locker = core.Locker()
+        cls.locker = core.Locker(host=HOST)
         cls.kwargs = {'patience': 0.01,
                       'label': cls.label,
                       'resource': cls.resource}
@@ -49,7 +42,7 @@ class TestBase(unittest.TestCase):
         # creates or activates and removes the test queue
         cls.lock()
         time.sleep(0.01)
-        tools.reset(resources=[cls.resource])
+        tools.reset(host=HOST, resources=[cls.resource])
         time.sleep(0.01)
 
     # helpers
@@ -106,7 +99,7 @@ class TestCore(TestBase):
 
     def test_reset_dead_queue(self):
         self.assertRaises(RuntimeError, self.lock_and_crash)
-        tools.reset(resources=[self.resource])
+        tools.reset(host=HOST, resources=[self.resource])
 
     def test_crash_going(self):
         thread1 = threading.Thread(target=self.lock_short)
@@ -114,7 +107,7 @@ class TestCore(TestBase):
         thread1.start()
         thread2.start()
         self.assertRaises(RuntimeError, self.lock_and_crash)
-        tools.reset(resources=[self.resource])
+        tools.reset(host=HOST, resources=[self.resource])
         thread1.join()
         thread2.join()
         self.cycle()
@@ -139,7 +132,7 @@ class TestTools(TestBase):
         self.cycle()  # one cycle to have a predictable state
 
         # swap stdout with fresh StringIO
-        self.stdout, sys.stdout = sys.stdout, StringIO()
+        self.stdout, sys.stdout = sys.stdout, io.StringIO()
 
     def tearDown(self):
         # swap back
@@ -158,7 +151,7 @@ class TestTools(TestBase):
     def test_follow(self):
         thread = threading.Thread(target=self.lock_and_kill_later)
         thread.start()
-        tools.follow(resources=[self.resource])
+        tools.follow(host=HOST, resources=[self.resource])
         thread.join()
         expected = (
             'test_resource: 1 assigned to "test_label"\n'
@@ -172,14 +165,14 @@ class TestTools(TestBase):
         self.lock()  # there must be something to follow
         thread = threading.Thread(target=self.kill_later)
         thread.start()
-        tools.follow(resources=[])
+        tools.follow(host=HOST, resources=[])
         thread.join()
 
     # lock
     def test_lock(self):
         thread = threading.Thread(target=self.kill_later)
         thread.start()
-        tools.lock(resources=[self.resource])
+        tools.lock(host=HOST, resources=[self.resource])
         thread.join()
 
         expected = (
@@ -193,7 +186,7 @@ class TestTools(TestBase):
         thread = threading.Thread(target=self.kill_later)
         thread.start()
         with self.locker.lock(self.resource):
-            tools.lock(resources=[self.resource])
+            tools.lock(host=HOST, resources=[self.resource])
         thread.join()
 
         expected = (
@@ -203,7 +196,7 @@ class TestTools(TestBase):
         self.assertEqual(sys.stdout.getvalue(), expected)
 
     def test_lock_none(self):
-        tools.lock(resources=[])
+        tools.lock(host=HOST, resources=[])
 
     def test_lock_many(self):
         os.fork, os_fork = lambda: 1, os.fork  # patch fork
@@ -211,7 +204,7 @@ class TestTools(TestBase):
         resources = [self.resource, self.resource]
         thread = threading.Thread(target=self.kill_later)
         thread.start()
-        tools.lock(resources=resources)
+        tools.lock(host=HOST, resources=resources)
         thread.join()
 
         os.fork = os_fork  # restore fork
@@ -219,18 +212,18 @@ class TestTools(TestBase):
     # reset
     def test_reset_success(self):
         self.lock()
-        tools.reset(resources=[self.resource])
+        tools.reset(host=HOST, resources=[self.resource])
         self.assertEqual(sys.stdout.getvalue(), '')
 
     def test_reset_no_queue(self):
-        tools.reset(resources=[self.resource])
+        tools.reset(host=HOST, resources=[self.resource])
         expected = 'No such queue: "test_resource".\n'
         self.assertEqual(sys.stdout.getvalue(), expected)
 
     def test_reset_busy(self):
         with self.locker.lock(**self.kwargs):
             time.sleep(0.01)
-            tools.reset(resources=[self.resource])
+            tools.reset(host=HOST, resources=[self.resource])
         expected = '"test_resource" is in use by 1 user(s).\n'
         self.assertEqual(sys.stdout.getvalue(), expected)
 
@@ -238,7 +231,7 @@ class TestTools(TestBase):
         self.lock()  # as opposed to the no queue case
         thread = threading.Thread(target=self.lock_later)
         thread.start()
-        tools.reset(resources=[self.resource], test=True)
+        tools.reset(host=HOST, resources=[self.resource], test=True)
         thread.join()
         expected = 'Activity detected for "test_resource".\n'
         self.assertEqual(sys.stdout.getvalue(), expected)
@@ -252,10 +245,10 @@ class TestTools(TestBase):
 
         with self.locker.lock(**self.kwargs):
             time.sleep(0.01)
-            tools.status(resources=[self.resource, other_resource])
+            tools.status(host=HOST, resources=[self.resource, other_resource])
 
         # cleanup the other resource
-        tools.reset(resources=[other_resource])
+        tools.reset(host=HOST, resources=[other_resource])
 
         expected = (
             'test_resource                                              1\n'
@@ -268,11 +261,11 @@ class TestTools(TestBase):
         self.assertEqual(sys.stdout.getvalue(), expected)
 
     def test_status_none(self):
-        tools.status(resources=self.resource)
+        tools.status(host=HOST, resources=self.resource)
 
     def test_status_any(self):
         with self.locker.lock(**self.kwargs):
-            tools.status(resources=[])
+            tools.status(host=HOST, resources=[])
         line = 'test_resource                                              1'
         self.assertIn(line, sys.stdout.getvalue().split('\n'))
 
@@ -281,7 +274,7 @@ class TestConsole(unittest.TestCase):
 
     def test_console(self):
         argv = sys.argv
-        connection = ['--host', 'localhost', '--port', '6379', '--db', '0']
+        connection = ['--host', 'redis', '--port', '6379', '--db', '0']
         sys.argv = [''] + connection + ['status']
         status = console.main()
         self.assertFalse(status)
