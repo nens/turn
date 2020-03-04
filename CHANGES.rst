@@ -2,7 +2,7 @@ Changes
 =======
 
 
-0.6 (unreleased)
+1.0 (2020-03-04)
 ----------------
 
 - Add classifiers to setup.py.
